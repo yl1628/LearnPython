@@ -1,0 +1,58 @@
+*** Settings ***
+Library           AppiumLibrary
+Library           Collections
+
+*** Test Cases ***
+挂机脚本1
+    Open Application    http://localhost:4723/wd/hub    platformName=Android    platformVersion=7.1.1    deviceName=6423b456    app=E:/UCMobile/Yealink_UC_Android_1.0.254.647-pre-release.apk    appPackage=com.yealink.uc.android.alpha
+    ...    unicodeKeyboard=True    resetKeyboard=True
+    @{Account_List}    AccountMessage    #所有的账号信息
+    :FOR    ${i}    IN RANGE    20000
+    \    #判断是否在登录界面
+    \    ${isLogin}    Run Keyword And Return Status    Wait Until Page Contains Element    com.yealink.uc.android.alpha:id/btn_login    10s
+    \    Run Keyword If    ${isLogin}==False    Log Out
+    \    ${Login Succeed}    Run Keyword And Return Status    OutNet_Login    @{Account_List}
+    \    Run Keyword If    ${Login Succeed}==False    Reopen Application
+    \    ${inLogin}    Run Keyword And Return Status    Wait Until Page Contains Element    com.yealink.uc.android.alpha:id/btn_login    10s
+    \    Run Keyword If    ${isLogin}==False    Log Out
+
+*** Keywords ***
+AccountMessage
+    @{Message_List}    Create List    yl1628@yealink.com    8289543t    yl16288@yealink.com    43b2966h    yl16289@yealink.com
+    ...    5609s577    yl299@yealink.com    m1y6a11g    yl162888@yealink.com    swj8hty5
+    [Return]    @{Message_List}
+
+OutNet_Login
+    [Arguments]    @{val1}
+    ${Account_List}=    Create Dictionary    @{val1}
+    @{keys}    Get Dictionary Keys    ${Account_List}
+    #取随机用户名密码
+    ${account}    Evaluate    random.choice(@{keys})    random
+    ${passwd}=    Get From Dictionary    ${Account_List}    ${account}
+    Wait Until Page Contains Element    com.yealink.uc.android.alpha:id/btn_login    10s
+    Input Text    com.yealink.uc.android.alpha:id/edit    ${account}
+    Input Text    com.yealink.uc.android.alpha:id/et_psw    ${passwd}
+    Input Text    com.yealink.uc.android.alpha:id/et_server    uctest.yealink.com:9951
+    Click Button    登录
+    Wait Until Page Contains Element    com.yealink.uc.android.alpha:id/iv_head    10s
+
+Log Out
+    Wait Until Page Contains Element    com.yealink.uc.android.alpha:id/iv_head    10s
+    Click Element    com.yealink.uc.android.alpha:id/iv_head
+    Wait Until Page Contains Element    com.yealink.uc.android.alpha:id/rllt_user_setting    10s
+    Click Element    com.yealink.uc.android.alpha:id/rllt_user_setting
+    Wait Until Page Contains    退出    10s
+    Click Element    com.yealink.uc.android.alpha:id/btn_logout
+    Wait Until Page Contains    确定    10s
+    Click Element    com.yealink.uc.android.alpha:id/positiveButton
+    Wait Until Page Contains Element    com.yealink.uc.android.alpha:id/btn_login    10s
+
+Reopen Application
+    Close Application
+    Open Application    http://localhost:4723/wd/hub    platformName=Android    platformVersion=7.1.1    deviceName=6423b456    app=E:/UCMobile/Yealink_UC_Android_1.0.254.647-pre-release.apk    appPackage=com.yealink.uc.android.alpha
+    ...    unicodeKeyboard=True    resetKeyboard=True
+    ${Reopen Succeed1}    Run Keyword And Return Status    Wait Until Page Contains Element     com.yealink.uc.android.alpha:id/iv_head    10s
+    ${Reopen Succeed2}    Run Keyword And Return Status    Wait Until Page Contains Element    com.yealink.uc.android.alpha:id/btn_login    10s
+    Run Keyword If    ${Reopen Succeed1}==True    log    Reopen Succeed
+    ...    ELSE IF    ${Reopen Succeed2}==True    log    Reopen Succeed
+    ...    ELSE    Reopen Application
